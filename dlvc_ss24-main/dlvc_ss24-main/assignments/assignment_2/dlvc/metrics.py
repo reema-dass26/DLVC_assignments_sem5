@@ -1,5 +1,6 @@
 from abc import ABCMeta, abstractmethod
 import torch
+import numpy as np
 
 class PerformanceMeasure(metaclass=ABCMeta):
     '''
@@ -73,17 +74,30 @@ class SegMetrics(PerformanceMeasure):
         ##TODO implement
         pass
           
+    def compute_iou(y_true, y_pred):
+        intersection = np.sum(np.logical_and(y_true, y_pred))
+        union = np.sum(np.logical_or(y_true, y_pred))
+        return intersection / union
+
 
     
-    def mIoU(self) -> float:
+    def mIoU(self,y_true, y_pred, num_classes) -> float: #  create obj and send the param n remove from here
+
         '''
         Compute and return the mean IoU as a float between 0 and 1.
         Returns 0 if no data is available (after resets).
         If the denominator for IoU calculation for one of the classes is 0,
         use 0 as IoU for this class.
         '''
-        ##TODO implement
-        pass
+        
+        miou_total = 0.0
+        for i in range(1, num_classes + 1):  # Assuming class labels start from 1
+            y_true_class = (y_true == i)
+            y_pred_class = (y_pred == i)
+            miou_class = compute_iou(y_true_class, y_pred_class)
+            miou_total += miou_class
+        return miou_total / num_classes
+        
 
 
 
