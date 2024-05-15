@@ -47,8 +47,8 @@ class SegMetrics(PerformanceMeasure):
         '''
         Resets the internal state.
         '''
-        ## TODO implement
-        pass
+        self.intersection = torch.zeros(self.num_classes)
+        self.union = torch.zeros(self.num_classes)
 
 
 
@@ -62,17 +62,34 @@ class SegMetrics(PerformanceMeasure):
         Make sure to not include pixels of value 255 in the calculation since those are to be ignored. 
         '''
 
-       ##TODO implement
-        pass
+        if prediction.dim() != 4 or target.dim() != 3:
+            raise ValueError("Incorrect dimensions for prediction or target.")
+        if prediction.shape[0] != target.shape[0] or prediction.shape[2:] != target.shape[1:]:
+            raise ValueError("Shape mismatch between prediction and target.")
+        if target.max() >= self.num_classes or target.min() < 0:
+            raise ValueError("Target values are out of range.")
+        
+        # Ignore pixels with value 255
+        mask = target != 255
+        
+        # Get the predicted class for each pixel
+        pred_class = torch.argmax(prediction, dim=1)
+        
+        for cls in range(self.num_classes):
+            pred_mask = (pred_class == cls) & mask
+            true_mask = (target == cls) & mask
+            
+            self.intersection[cls] += (pred_mask & true_mask).sum().item()
+            self.union[cls] += (pred_mask | true_mask).sum().item()
+
    
 
     def __str__(self):
         '''
         Return a string representation of the performance, mean IoU.
-        e.g. "mIou: 0.54"
+        e.g. "mIoU: 0.54"
         '''
-        ##TODO implement
-        pass
+        return f"mIoU: {self.mean_iou:.2f}"
           
     def compute_iou(y_true, y_pred):
         intersection = np.sum(np.logical_and(y_true, y_pred))
@@ -94,7 +111,7 @@ class SegMetrics(PerformanceMeasure):
         for i in range(1, num_classes + 1):  # Assuming class labels start from 1
             y_true_class = (y_true == i)
             y_pred_class = (y_pred == i)
-            miou_class = compute_iou(y_true_class, y_pred_class)
+            miou_class =self.compute_iou(y_true_class, y_pred_class)
             miou_total += miou_class
         return miou_total / num_classes
         
