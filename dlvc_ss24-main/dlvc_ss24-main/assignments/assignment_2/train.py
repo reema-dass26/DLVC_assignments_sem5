@@ -10,8 +10,25 @@ from dlvc.models.segment_model import DeepSegmenter
 from dlvc.dataset.oxfordpets import  OxfordPetsCustom
 from dlvc.metrics import SegMetrics
 from dlvc.trainer import ImgSemSegTrainer
+import argparse
+import os
+import torch
+from pathlib import Path
+import os
+from datetime import datetime
+
+# from dlvc.models.class_model import DeepClassifier  # etc. change to your model
+# from dlvc.models.cnn import YourCNN
+# from dlvc.models.vit import ViT
+from dlvc.metrics import Accuracy
+from dlvc.trainer import ImgClassificationTrainer
+# from dlvc.datasets.cifar10 import CIFAR10Dataset
+# from dlvc.datasets.dataset import Subset
 
 
+# from torchvision.models import resnet18
+from torch.optim import AdamW
+from torch.optim.lr_scheduler import ExponentialLR, LinearLR, StepLR
 
 def train(args):
 
@@ -47,9 +64,47 @@ def train(args):
 
 
 
-    device = ...
+    # Check if CUDA (GPU) is available
+    if torch.cuda.is_available():
+        device = torch.device("cuda")
+        print("==> Using GPU:", torch.cuda.get_device_name())
+    else:
+        device = torch.device("cpu")
+        print("==> CUDA is not available. Using CPU.")
 
-    model = DeepSegmenter(...)
+    device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+
+
+    models = []
+    if args.model == "fcn_resnet50":
+        models.append(DeepSegmenter(fcn_resnet50()))
+    # elif args.model == "cnn":
+    #     models.append(YourCNN())
+    # elif args.model == "vit":
+    #     models.append(ViT())
+    elif args.model =='deeplabv3_resnet50':
+        # models.append(DeepSegmenter(deeplabv3_resnet50())) #TODO
+        # models.append(YourCNN())
+        # models.append(ViT())
+
+    # model = DeepSegmenter(...)
+    for model in models:
+        print(f"==> Started {model.mname()}")
+        model_save_dir = model_save_dir / model.mname()
+        model.to(device)
+        
+        optimizer = AdamW(
+            model.parameters(), 
+            weight_decay=args.weight_decay,
+            lr=args.learning_rate, 
+            amsgrad=args.amsgrad,
+        )
+        loss_fn = torch.nn.CrossEntropyLoss()
+
+        train_metric = Accuracy(classes=train_data.classes)
+        val_metric = Accuracy(classes=val_data.classes)
+        val_frequency = 5
+
     optimizer = ...
     loss_fn = ...
     
