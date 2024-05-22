@@ -108,7 +108,7 @@ class SegMetrics(PerformanceMeasure):
         '''
         
         miou_total = 0.0
-        for i in range(1, num_classes + 1):  # Assuming class labels start from 1
+        for i in range(0, num_classes): 
             y_true_class = (y_true == i)
             y_pred_class = (y_pred == i)
             miou_class =self.compute_iou(y_true_class, y_pred_class)
@@ -116,7 +116,12 @@ class SegMetrics(PerformanceMeasure):
         return miou_total / num_classes
         
 
+    def dice_coefficient(y_true, y_pred):
+        intersection = np.sum(y_true * y_pred)
+        dice_scores=2 * intersection / (np.sum(y_true) + np.sum(y_pred))
+        print(f'Average Dice Coefficient: {np.mean(dice_scores):.4f}')
 
+        return dice_scores
 
 
 
