@@ -1,6 +1,7 @@
 
 import argparse
 import os
+import numpy as np
 import torch
 from torchvision.models.segmentation import FCN
 from torchvision.models.segmentation.fcn import FCNHead
@@ -18,10 +19,10 @@ import torch
 from pathlib import Path
 import os
 import torch.nn as nn
-
+from tqdm import tqdm
+import collections
 from datetime import datetime
-from dlvc.metrics import Accuracy
-from dlvc.trainer import ImgClassificationTrainer
+
 from torch.optim import AdamW
 from torch.optim.lr_scheduler import ExponentialLR, LinearLR, StepLR
 
@@ -72,19 +73,18 @@ def train(args):
         print("==> CUDA is not available. Using CPU.")
 
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
-
+    train_metric = SegMetrics(classes=train_data.classes_seg)
+    val_metric = SegMetrics(classes=val_data.classes_seg)
 
     
     if args.model == "fcn_resnet50": #Pretrained model selection for the assignment
         if args.pretrained=='False':
-            # models.append(DeepSegmenter(fcn_resnet50(pretrained=False)))
             model= DeepSegmenter(fcn_resnet50(pretrained=False))
-
             optimizer = optim.Adam(model.parameters(), lr=0.001)
             loss_fn = nn.CrossEntropyLoss()
             
-            train_metric = SegMetrics(classes=train_data.classes_seg)
-            val_metric = SegMetrics(classes=val_data.classes_seg)
+          
+
             val_frequency = 2
 
             model_save_dir = Path("saved_models")
@@ -112,79 +112,86 @@ def train(args):
 
 
         else:
-            # models.append(DeepSegmenter(fcn_resnet50(pretrained=True)))
-            model=DeepSegmenter(fcn_resnet50(pretrained=True))
-            model.eval()  
+            subtract_one = isinstance(train_data, OxfordPetsCustom)
+
+            backbone=DeepSegmenter(fcn_resnet50(pretrained=True))
+            # Extract the encoder part from the backbone (without the final fully connected layer)
+            encoder = nn.Sequential(*list(backbone.children())[:-1])
+            for param in encoder.parameters():
+                param.requires_grad = False
+            num_classes = len(val_data.classes)
+            model.classifier[4] = nn.Conv2d(512, num_classes, kernel_size=(1, 1), stride=(1, 1))
+
+            val_metric.reset()
+
             val_data_loader = torch.utils.data.DataLoader(val_data,
                                           batch_size=64,
                                           shuffle=False,
                                           num_workers=1)
-            num_train_data = len(train_data)
-            num_val_data = len(val_data)
-            with torch.no_grad():  # Disable gradient calculation during validation
-                # Iterate over the validation dataset
-                for images, targets in val_data_loader:
-                    images, targets = images.to(device), targets.to(device)
-
-                    # Perform inference
-                    outputs = model(images)['out']
-
-                    # Evaluate the predictions (you can use appropriate metrics here)
-                    # For example, you can compute accuracy, IoU, etc.
-                    # You need to implement this part based on your specific requirements
-
-    
             
 
-    # elif args.model =='deeplabv3_resnet50':
-  
-    #     pass
+            def evaluate_model(model, val_data_loader):
+                model.eval()
+                correct = 0
+                total = 0
+                with torch.no_grad():
+                    for inputs, labels in val_data_loader:
+                        outputs = model(inputs)['out']
+                        _, predicted = torch.max(outputs, 1)
+                        total += labels.size(0)
+                        correct += (predicted == labels).sum().item()
+                        val_metric.update(outputs.cpu(), labels.cpu())
+                        for i in range(num_classes):
+                            true_mask = (labels == i)
+                            pred_mask = (predicted == i)
+                            intersection = (true_mask & pred_mask).sum().item()
+                            union = (true_mask | pred_mask).sum().item()
+                            if union != 0:
+                                class_iou[i] += intersection / union
+                            else:
+                                class_iou[i] += 1  # If union is 0, set IoU to 1 (best possible score)
+                accuracy = correct / total
+                class_iou /= len(val_data_loader)
+                mean_iou = np.mean(class_iou)
+                print(f'Accuracy on test set: {accuracy:.4f}')
+                print(f'Mean IoU: {mean_iou:.4f}')
+                for i in range(num_classes):
+                    print(f'IoU for class {i}: {class_iou[i]:.4f}')
+                           
+            # Evaluate the model
+            evaluate_model(model, val_data_loader)
 
-    # model = DeepSegmenter(...)
-    # for model in models:
-    #     print(f"==> Started {model.mname()}")
-    #     model_save_dir = model_save_dir / model.mname()
-    #     model.to(device)
-        
-    #     optimizer = AdamW(
-    #         model.parameters(), 
-    #         weight_decay=args.weight_decay,
-    #         lr=args.learning_rate, 
-    #         amsgrad=args.amsgrad,
-    #     )
-    #     loss_fn = torch.nn.CrossEntropyLoss()
-
-
-    optimizer = ...
-    loss_fn = ...
     
-    train_metric = SegMetrics(classes=train_data.classes_seg)
-    val_metric = SegMetrics(classes=val_data.classes_seg)
-    val_frequency = 2
-
-    model_save_dir = Path("saved_models")
-    model_save_dir.mkdir(exist_ok=True)
-
-    lr_scheduler = ...
+    # optimizer = ...
+    # loss_fn = ...
     
-    trainer = ImgSemSegTrainer(model, 
-                    optimizer,
-                    loss_fn,
-                    lr_scheduler,
-                    train_metric,
-                    val_metric,
-                    train_data,
-                    val_data,
-                    device,
-                    args.num_epochs, 
-                    model_save_dir,
-                    batch_size=64,
-                    val_frequency = val_frequency)
-    trainer.train()
+    # train_metric = SegMetrics(classes=train_data.classes_seg)
+    # val_metric = SegMetrics(classes=val_data.classes_seg)
+    # val_frequency = 2
 
-    # see Reference implementation of ImgSemSegTrainer
-    # just comment if not used
-    trainer.dispose() 
+    # model_save_dir = Path("saved_models")
+    # model_save_dir.mkdir(exist_ok=True)
+
+    # lr_scheduler = ...
+    
+    # trainer = ImgSemSegTrainer(model, 
+    #                 optimizer,
+    #                 loss_fn,
+    #                 lr_scheduler,
+    #                 train_metric,
+    #                 val_metric,
+    #                 train_data,
+    #                 val_data,
+    #                 device,
+    #                 args.num_epochs, 
+    #                 model_save_dir,
+    #                 batch_size=64,
+    #                 val_frequency = val_frequency)
+    # trainer.train()
+
+    # # see Reference implementation of ImgSemSegTrainer
+    # # just comment if not used
+    # trainer.dispose() 
 
 if __name__ == "__main__":
     args = argparse.ArgumentParser(description='Training')
