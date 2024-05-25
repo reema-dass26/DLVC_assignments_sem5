@@ -4,9 +4,10 @@ from pathlib import Path
 from typing import Tuple
 
 import torch
+from tqdm import tqdm
+
 from dlvc.dataset.oxfordpets import OxfordPetsCustom
 from dlvc.wandb_logger import WandBLogger
-from tqdm import tqdm
 
 
 class BaseTrainer(metaclass=ABCMeta):

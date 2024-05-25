@@ -1,34 +1,24 @@
 import argparse
-import os
-import numpy as np
-import torch
-from torchvision.models.segmentation import FCN
-from torchvision.models.segmentation.fcn import FCNHead
-import torchvision.transforms.v2 as v2
-import torch.optim as optim
-from pathlib import Path
-from torchvision.models.segmentation import fcn_resnet50
-from dlvc.models.segment_model import DeepSegmenter
-from dlvc.dataset.oxfordpets import OxfordPetsCustom
-from dlvc.metrics import SegMetrics
-from dlvc.trainer import ImgSemSegTrainer
-import argparse
-import os
-import torch
-from pathlib import Path
-import os
-import torch.nn as nn
-from tqdm import tqdm
 import collections
+import os
 from datetime import datetime
 from pathlib import Path
 
+import numpy as np
+import torch
+import torch.nn as nn
+import torch.optim as optim
+import torchvision.transforms.v2 as v2
 from torch.optim import AdamW
 from torch.optim.lr_scheduler import ExponentialLR, LinearLR, StepLR
-from torchvision.models.segmentation import fcn_resnet50
+from torchvision.models.segmentation import FCN, fcn_resnet50
+from torchvision.models.segmentation.fcn import FCNHead
+from tqdm import tqdm
 
-
-from pathlib import Path
+from dlvc.dataset.oxfordpets import OxfordPetsCustom
+from dlvc.metrics import SegMetrics
+from dlvc.models.segment_model import DeepSegmenter
+from dlvc.trainer import ImgSemSegTrainer
 
 
 def train(args):

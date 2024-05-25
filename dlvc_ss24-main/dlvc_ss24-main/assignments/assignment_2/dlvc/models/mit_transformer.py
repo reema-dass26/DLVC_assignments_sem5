@@ -8,6 +8,7 @@ from functools import partial
 
 import torch
 import torch.nn as nn
+
 from dlvc.models.segformer_utils import *
 
 
@@ -157,7 +158,6 @@ class Attention(nn.Module):
 
 
 class Block(nn.Module):
-
     def __init__(
         self,
         dim,

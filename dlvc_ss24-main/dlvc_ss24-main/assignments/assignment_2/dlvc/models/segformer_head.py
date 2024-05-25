@@ -6,6 +6,7 @@
 
 import torch
 import torch.nn as nn
+
 from dlvc.models.segformer_utils import *
 
 
@@ -47,9 +48,12 @@ class SegFormerHead(nn.Module):
         assert min(feature_strides) == feature_strides[0]
         self.feature_strides = feature_strides
 
-        c1_in_channels, c2_in_channels, c3_in_channels, c4_in_channels = (
-            self.in_channels
-        )
+        (
+            c1_in_channels,
+            c2_in_channels,
+            c3_in_channels,
+            c4_in_channels,
+        ) = self.in_channels
 
         embedding_dim = decoder_params["embed_dim"]
 

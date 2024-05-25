@@ -3,7 +3,6 @@ import wandb
 
 wandb.login(key="b5281ace5764e8422ad3c7576c8a931461afbc18")
 class WandBLogger:
-
     def __init__(
         self, enabled=True, model: torch.nn.modules = None, run_name: str = None
     ) -> None:
