@@ -1,8 +1,8 @@
 # Deep Learning for Visual Computing - Assignment 2
 
-In the first assignment you have become familiar with a general training setup, simple dataset processing and image classification. In this assignment, assignment 2, you will get the chance to dive into image semantic segmentation, using pre-trained models and pre-train and fine-tune models yourself. 
+In the first assignment you have become familiar with a general training setup, simple dataset processing and image classification. In this assignment, assignment 2, you will get the chance to dive into image semantic segmentation, using pre-trained models and pre-train and fine-tune models yourself.
 
-Since assignment 1, no extra packages are necessary. 
+Since assignment 1, no extra packages are necessary.
 
 This text or the reference code might not be without errors. If you find a significant error (not just typos but errors that affect the assignment), please contact us via [email](mailto:dlvc@cvl.tuwien.ac.at). Students who find and report such errors will get extra points.
 
@@ -10,20 +10,20 @@ This text or the reference code might not be without errors. If you find a signi
 
 In comparison to image classification, which gives one class for a whole image, image semantic segmentation requires one class per pixel of each image.
 
-Familiarize yourself with the code in the folder `dlvc`. The file structure is similar to assignment 1, however with different models. Read the code and make sure that you understand what the individual classes and methods are doing. A good starting point might be the `train.py` file, to see what method or class is used for what. 
+Familiarize yourself with the code in the folder `dlvc`. The file structure is similar to assignment 1, however with different models. Read the code and make sure that you understand what the individual classes and methods are doing. A good starting point might be the `train.py` file, to see what method or class is used for what.
 
 ## Part 1 - Dataset
 For this section you won't need to implement anything yourself but you should get an understanding of the datasets used in the exercise.
 You are going to use two different datasets:
 1. **OxfordIIITPet**: This is a dataset of images of pets, where the task is to correctly segment the pet, it's boundary and the background; this results into 3 different segmentation classes. we can get it directly from `pytorch` (see [here](https://pytorch.org/vision/main/generated/torchvision.datasets.OxfordIIITPet.html#torchvision.datasets.OxfordIIITPet)) and is already ready-to-use for you in the code (`dlvc/dataset/oxfordpets.py`). Note that the labels are (1,2,3) and pytorch losses etc. work with 0-based labels, don't forget to subtract 1 from the labels vector, when using the dataset. Examples of the input images:
-![Input Images](img/input_test.png) 
-and their corresponding segmentation masks: 
+![Input Images](img/input_test.png)
+and their corresponding segmentation masks:
 ![Segmentation Masks](img/seg_mask_test.png)
 
-2. **Cityscapes**: This dataset is a collection of recorded street scenes, see the [official webpage](https://www.cityscapes-dataset.com/). 
-It has 30 classes, however in our examples we will only be using 19 of them, you can have a look at the file `dlvc/dataset/cityscapes.py` to get a grasps of all classes used. We have provided a preprocessed subset of the dataset for this exercise, please download it form [here](https://tuwienacat-my.sharepoint.com/:u:/g/personal/lisa_weijler_tuwien_ac_at/EX3bC0h1yeZKi6mFCd06VT0B7rlW77ihd-HXiHraNYy-6A?e=kquIms). Since we won't use all of the labels we will have some pixels which are to be left out of the optimization as well as from the metric calculation. Those pixels have the label-value `255`. 
+2. **Cityscapes**: This dataset is a collection of recorded street scenes, see the [official webpage](https://www.cityscapes-dataset.com/).
+It has 30 classes, however in our examples we will only be using 19 of them, you can have a look at the file `dlvc/dataset/cityscapes.py` to get a grasps of all classes used. We have provided a preprocessed subset of the dataset for this exercise, please download it form [here](https://tuwienacat-my.sharepoint.com/:u:/g/personal/lisa_weijler_tuwien_ac_at/EX3bC0h1yeZKi6mFCd06VT0B7rlW77ihd-HXiHraNYy-6A?e=kquIms). Since we won't use all of the labels we will have some pixels which are to be left out of the optimization as well as from the metric calculation. Those pixels have the label-value `255`.
 Examples of the input images:
-![Input Images](img/input_test_city.png) 
+![Input Images](img/input_test_city.png)
  and their corresponding segmentation masks: ![Segmentation Masks](img/seg_mask_test_city.png)
 
 Note: update the dataset paths in the `train.py` and `train_segformer.py` files to the place where you stored the datasets.
@@ -31,7 +31,7 @@ Note: update the dataset paths in the `train.py` and `train_segformer.py` files 
 ## Part 2 - Metrics
 Implement the `SegMetrics` class (`metrics.py`), which will help us with keeping track of the metric `mean intersection over union (mIoU)`. The mIoU is one of the most important metrics for semantic segmentation. In comparison to Accuracy the IoU is not affected by class imbalances and hence a good fit for semantic segmentation given the naturally occurring class imbalances in segmentation tasks. The mIou is the average of all IoU values per class: for each class in our dataset the Iou is computed as follows,
 
-$IoU = \frac{TP}{(TP + FP + FN)}$, 
+$IoU = \frac{TP}{(TP + FP + FN)}$,
 where $TP$ stands for `true positives`, the number of pixels predicted correctly with respect to the current class we are considering, $FP$ stands for `false positives`, the number of pixels which were wrongly predicted as the class at hand, and $FN$ stands for `false negatives`, the number of pixels which should have been predicted as the class but were not. The mean IoU is then the average of all IoU calculated per class.
 Consider the following confusion matrix in a multiclass problem as an example (3 classes),
 
@@ -62,30 +62,30 @@ For reference those are the curves gathered with a reference implementation usin
 
 In the lecture you covered the [SegFormer model](https://arxiv.org/abs/2105.15203), which uses 4 Transformer blocks and a lightweight decoder for segmentation tasks: ![SegFormer Overview](img/segformer.png)
 
-In the folder `models` you will find all files related to the SegFormer model, with almost all of it implemented. Have a look at the code and implement the missing parts listed below as instructed in the comments. 
+In the folder `models` you will find all files related to the SegFormer model, with almost all of it implemented. Have a look at the code and implement the missing parts listed below as instructed in the comments.
 The main model is in the file `segformer.py` you can start from there going through the code to get an overview. (You can ignore detailed things like `weight_init` class methods or `drop out` modules etc. The main parts of the models to focus on are the encoder `MixVisionTransformer` that is using the Block module `Block` and the Patch Embedding `OverlapPatchEmbed` in `mit_transformer.py` as well as the decoder `SegFormerHead` in the `segformer_head.py` file.)
 The following parts missing are to be implemented:
 
-1. In the `Block` module in the file `mit_transformer.py` compile the forward function as instructed in the code. 
-2. In the `OverlapPatchEmbed` module in the file `mit_transformer.py`in the `__init__` function fill in the missing lines as instructed. 
+1. In the `Block` module in the file `mit_transformer.py` compile the forward function as instructed in the code.
+2. In the `OverlapPatchEmbed` module in the file `mit_transformer.py`in the `__init__` function fill in the missing lines as instructed.
 3. In the module `SegFormerHead` in the `forward` function fill in the missing line compiling the features from the different levels.
 
 Bonus (max 2 pts): The self-attention used in the SegFormer differs to the standard self-attention (see paragraph `Efficient Self-Attention` in the paper, explain in the report how it differs and point out the relevant 5 lines of code in your submitted codebase.)
 
 For reference this image shows the metrics for the SegFormer with the same parameters as stated above:![alt text](img/image_segformer.png)
 
-## Part 6 - Pre-train on Cityscapes, fine-tune on OxfordIIITPet 
+## Part 6 - Pre-train on Cityscapes, fine-tune on OxfordIIITPet
 
-In part 4 we have used pre-trained weights given from pytorch. In this part you will pre-train the SegFormer yourself using the `Cityscapes` dataset and then fine-tune the model for the 
+In part 4 we have used pre-trained weights given from pytorch. In this part you will pre-train the SegFormer yourself using the `Cityscapes` dataset and then fine-tune the model for the
 `OxfordIIITPet` dataset. Note that the number of classes differs between those datasets and hence for the last layers we cannot use the pre-trained weights. Since our SegFormer model is divided into `encoder` and `decoder`, you will use the pre-trained weights for the encoder only and the decoder is always trained from-scratch. To successfully leverage the `Cityscapes` dataset for a performance boost on the OxfordIIITPet dataset follow the following steps:
-1. Pre-training: Train the SegFormer using the `Cityscapes` for a couple of epochs (in the reference plots it was trained for 40 epochs with a batchsize of 16) and save the model at the end of those 40 (or less) epochs (save the state_dict as discussed in the previous exercise). Be aware that we want to exclude pixels with a label of `255` during optimization, for this simply set the parameter `ignore_index=255`, when creating the CrossEntropyLoss. 
+1. Pre-training: Train the SegFormer using the `Cityscapes` for a couple of epochs (in the reference plots it was trained for 40 epochs with a batchsize of 16) and save the model at the end of those 40 (or less) epochs (save the state_dict as discussed in the previous exercise). Be aware that we want to exclude pixels with a label of `255` during optimization, for this simply set the parameter `ignore_index=255`, when creating the CrossEntropyLoss.
 2. Fine-tuning: Create an instance of the SegFormer model class for 3 classes. Load the state_dict of the model saved in step 1 and update the weights of the newly created SegFormer model with the loaded weights. Make sure to **only** update the weights of the encoder. (Hint: one could either iterate over the state_dict of the new model and update the values if their key in the dictionary starts with "encoder." (double check if this is the correct key, this depends on how you saved your model), or another option would be, to only save the encoder state_dict and use `model.net.encoder.load_state_dict(..)` ). Once the parameters are loaded there are two option we will try:
 
     **a.** Using the pre-trained weights as weight-inits: for this you just need to start the training after the encoder weights have successfully been updated with the pre-trained weights.
 
     **b.** Freezing the pre-trained encoder and only train the decoder: for this you need to freeze the entire encoder using `requires_grad=False` of parameters (e.g. `model.net.encoder.requires_grad_(False)`). Also make sure to give the optimizer only the necessary parameters to optimize (the decoder parameters).
 
-Include a comparison of the SegFormer trained from scratch and with the two fine-tuning options in the report including train and validation metrics plots. 
+Include a comparison of the SegFormer trained from scratch and with the two fine-tuning options in the report including train and validation metrics plots.
 Visualize the predicted masks of the best performing model of a couple of validation samples from the `OxfordIIITPet` (you can look at and adapt `viz_pets.py` for that).
 
 To get additional points try different learning rates: usually a lower learning rate is used for fine-tuning. Pick one fine-tune option and compare the results of using the same learning rate as used during pre-training with the results of using a lower one (e.g. half). Discuss your findings in the report.
