@@ -1,5 +1,6 @@
 .pre-commit-config.yaml
 notes
+data/
 
 ### JupyterNotebooks ###
 # gitignore template for Jupyter Notebooks

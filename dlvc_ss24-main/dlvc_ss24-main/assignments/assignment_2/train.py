@@ -37,7 +37,7 @@ def train(args):
             v2.ToDtype(torch.long, scale=False),
             v2.Resize(size=(64, 64), interpolation=v2.InterpolationMode.NEAREST),
         ]
-    )  # ,
+    )
 
     val_transform = v2.Compose(
         [
@@ -57,7 +57,7 @@ def train(args):
 
     train_data = OxfordPetsCustom(
         root=args.files,
-        split=args.files,
+        split="trainval",
         target_types="segmentation",
         transform=train_transform,
         target_transform=train_transform2,
@@ -65,8 +65,8 @@ def train(args):
     )
 
     val_data = OxfordPetsCustom(
-        root="./",
-        split="trainval",
+        root=args.files,
+        split="test",
         target_types="segmentation",
         transform=val_transform,
         target_transform=val_transform2,
@@ -86,65 +86,60 @@ def train(args):
     models = []
     if args.model == "fcn_resnet50":
         models.append(DeepSegmenter(fcn_resnet50()))
-    # elif args.model == "cnn":
-    #     models.append(YourCNN())
-    # elif args.model == "vit":
-    #     models.append(ViT())
     elif args.model == "deeplabv3_resnet50":
+        # TODO (dm) Why does this exist
         pass
-        # models.append(DeepSegmenter(deeplabv3_resnet50())) #TODO
-        # models.append(YourCNN())
-        # models.append(ViT())
-
-    # model = DeepSegmenter(...)
-    for model in models:
-        print(f"==> Started {model.mname()}")
-        model_save_dir = model_save_dir / model.mname()
-        model.to(device)
-
-        optimizer = AdamW(
-            model.parameters(),
-            weight_decay=args.weight_decay,
-            lr=args.learning_rate,
-            amsgrad=args.amsgrad,
-        )
-        loss_fn = torch.nn.CrossEntropyLoss()
-
-        train_metric = Accuracy(classes=train_data.classes)
-        val_metric = Accuracy(classes=val_data.classes)
-        val_frequency = 5
-
-    optimizer = ...
-    loss_fn = ...
-
-    train_metric = SegMetrics(classes=train_data.classes_seg)
-    val_metric = SegMetrics(classes=val_data.classes_seg)
+        #models.append(DeepSegmenter(deeplabv3_resnet50()))
+    else:
+        pass
+        #models.append(DeepSegmenter(fcn_resnet50()))
+        #models.append(DeepSegmenter(deeplabv3_resnet50()))
 
     model_save_dir = Path("saved_models")
     model_save_dir.mkdir(exist_ok=True)
 
-    lr_scheduler = ...
+    if args.scheduler == "exponential":
+        lr_scheduler = ExponentialLR(optimizer, gamma=0.9)
+    elif args.scheduler == "linear":
+        lr_scheduler = LinearLR(optimizer, 30)
+    else:
+        lr_scheduler = LinearLR(optimizer, start_factor=0.5, total_iters=4)
 
-    trainer = ImgSemSegTrainer(
-        model,
-        optimizer,
-        loss_fn,
-        lr_scheduler,
-        train_metric,
-        val_metric,
-        train_data,
-        val_data,
-        device,
-        args.epochs,
-        model_save_dir,
-        batch_size=64,
-        val_frequency=val_frequency,
+    optimizer = AdamW(
+        model.parameters(),
+        weight_decay=args.weight_decay,
+        lr=args.learning_rate,
+        amsgrad=args.amsgrad,
     )
-    trainer.train()
+    loss_fn = torch.nn.CrossEntropyLoss()
 
-    # see Reference implementation of ImgSemSegTrainer
-    # just comment if not used
-    trainer.dispose()
+    train_metric = SegMetrics(classes=train_data.classes_seg)
+    val_metric = SegMetrics(classes=val_data.classes_seg)
+    val_frequency = 5
+
+    for model in models:
+        print(f"==> Started {model.mname()}")
+        model.to(device)
+        trainer = ImgSemSegTrainer(
+            model,
+            optimizer,
+            loss_fn,
+            lr_scheduler,
+            train_metric,
+            val_metric,
+            train_data,
+            val_data,
+            device,
+            args.epochs,
+            model_save_dir,
+            batch_size=64,
+            val_frequency=val_frequency,
+        )
+        
+        trainer.train()
+        # see Reference implementation of ImgSemSegTrainer
+        # just comment if not used
+        trainer.dispose()
 
 
 if __name__ == "__main__":
