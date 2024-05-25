@@ -212,13 +212,22 @@ class Block(nn.Module):
                 m.bias.data.zero_()
 
     def forward(self, x, H, W):
-        # TODO implement the forward pass of one Transformer block
-        # follow the instruction line by line
-        x1 = ...  # apply self.norm1 to x
-        x1 = ...  # apply self.attn to x1
+        # Apply self.norm1 to x
+        x1 = self.norm1(x)
+        
+        # Apply self.attn to x1
+        x1 = self.attn(x1, H, W)
+        
+        # Apply residual connection and drop path
         x1 = x + self.drop_path(x1)
-        x2 = ...  # apply self.norm2 to x1
-        x2 = ...  # apply self.mlp to x2
+        
+        # Apply self.norm2 to x1
+        x2 = self.norm2(x1)
+        
+        # Apply self.mlp to x2
+        x2 = self.mlp(x2)
+        
+        # Apply residual connection and drop path
         x2 = x1 + self.drop_path(x2)
         return x2
 
@@ -229,12 +238,12 @@ class OverlapPatchEmbed(nn.Module):
     def __init__(self, img_size=224, patch_size=7, stride=4, in_chans=3, embed_dim=768):
         super().__init__()
 
-        # TODO implement
-        # compute the new H an W given the original image size and the patchsize
-        # (we only look at quadratic patches meaning patch_size is same for H and W)
-        self.H, self.W = ...
-        # compute the number of patches given the new H and W
-        self.num_patches = ...
+        # Compute the new H and W given the original image size and the patch size
+        self.H = (img_size - patch_size + stride) // stride
+        self.W = (img_size - patch_size + stride) // stride
+        
+        # Compute the number of patches given the new H and W
+        self.num_patches = self.H * self.W
 
         self.proj = nn.Conv2d(
             in_chans,
