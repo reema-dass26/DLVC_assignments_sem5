@@ -1,7 +1,14 @@
 import torch
 import wandb
+import os
 
-wandb.login(key="b5281ace5764e8422ad3c7576c8a931461afbc18")
+key = os.getenv('WANDDB_KEY')
+entity = os.getenv('WANDDB_ENTITY')
+project = os.getenv('WANDDB_PROJECT')
+
+wandb.login(key=key)
+
+
 class WandBLogger:
     def __init__(
         self, enabled=True, model: torch.nn.modules = None, run_name: str = None
@@ -10,8 +17,8 @@ class WandBLogger:
         self.enabled = enabled
 
         if self.enabled:
-            wandb.init(entity="ree_26",
-                        project="DLVC_2"
+            wandb.init(entity=entity,
+                        project=project
                         # group="your run group"
                         )
             if run_name is None:
