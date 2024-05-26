@@ -32,20 +32,20 @@ p = Path('dlvc_ss24-main\\dlvc_ss24-main\\assignments\\assignment_2\\data')
 
 def train(args):
 
-    train_transform = v2.Compose([v2.ToImage(), 
-                            v2.ToDtype(torch.float32, scale=True),
+    train_transform = v2.Compose([v2.ToPILImage(), 
+                            v2.ToDtype(torch.float32),
                             v2.Resize(size=(64,64), interpolation=v2.InterpolationMode.NEAREST),
                             v2.Normalize(mean = [0.485, 0.456,0.406], std = [0.229, 0.224, 0.225])])
-    train_transform2 = v2.Compose([v2.ToImage(), 
-                            v2.ToDtype(torch.long, scale=False),
+    train_transform2 = v2.Compose([v2.ToPILImage(), 
+                            v2.ToDtype(torch.long),
                             v2.Resize(size=(64,64), interpolation=v2.InterpolationMode.NEAREST)])#,
     
-    val_transform = v2.Compose([v2.ToImage(), 
-                            v2.ToDtype(torch.float32, scale=True),
+    val_transform = v2.Compose([v2.ToPILImage(), 
+                            v2.ToDtype(torch.float32),
                             v2.Resize(size=(64,64), interpolation=v2.InterpolationMode.NEAREST),
                             v2.Normalize(mean = [0.485, 0.456,0.406], std = [0.229, 0.224, 0.225])])
-    val_transform2 = v2.Compose([v2.ToImage(), 
-                            v2.ToDtype(torch.long, scale=False),
+    val_transform2 = v2.Compose([v2.ToPILImage(), 
+                            v2.ToDtype(torch.long),
                             v2.Resize(size=(64,64), interpolation=v2.InterpolationMode.NEAREST)])
 
     train_data = OxfordPetsCustom(root=p, 
@@ -201,7 +201,7 @@ if __name__ == "__main__":
         "-p", "--pretrained", default="False", choices=["True", "False"]
     )
     args.add_argument(
-        "-m", "--model", default="resnet", choices=["fcn_resnet50", ]
+        "-m", "--model", default="fcn_resnet50", choices=["fcn_resnet50", ]
     )
     
     if not isinstance(args, tuple):

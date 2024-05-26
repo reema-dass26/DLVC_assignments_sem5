@@ -47,8 +47,8 @@ class SegMetrics(PerformanceMeasure):
         '''
         Resets the internal state.
         '''
-        self.intersection = torch.zeros(self.num_classes)
-        self.union = torch.zeros(self.num_classes)
+        self.intersection = torch.zeros(len(self.classes))
+        self.union = torch.zeros(len(self.classes))
 
 
 
