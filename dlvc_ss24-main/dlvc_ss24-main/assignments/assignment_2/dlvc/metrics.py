@@ -66,7 +66,7 @@ class SegMetrics(PerformanceMeasure):
             raise ValueError("Incorrect dimensions for prediction or target.")
         if prediction.shape[0] != target.shape[0] or prediction.shape[2:] != target.shape[1:]:
             raise ValueError("Shape mismatch between prediction and target.")
-        if target.max() >= self.num_classes or target.min() < 0:
+        if target.max() >= self.classes or target.min() < 0:
             raise ValueError("Target values are out of range.")
         
         # Ignore pixels with value 255
@@ -75,7 +75,7 @@ class SegMetrics(PerformanceMeasure):
         # Get the predicted class for each pixel
         pred_class = torch.argmax(prediction, dim=1)
         
-        for cls in range(self.num_classes):
+        for cls in range(self.classes):
             pred_mask = (pred_class == cls) & mask
             true_mask = (target == cls) & mask
             
