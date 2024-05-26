@@ -32,19 +32,19 @@ p = Path('dlvc_ss24-main\\dlvc_ss24-main\\assignments\\assignment_2\\data')
 
 def train(args):
 
-    train_transform = v2.Compose([v2.ToPILImage(), 
+    train_transform = v2.Compose([v2.ToImageTensor(), 
                             v2.ToDtype(torch.float32),
                             v2.Resize(size=(64,64), interpolation=v2.InterpolationMode.NEAREST),
                             v2.Normalize(mean = [0.485, 0.456,0.406], std = [0.229, 0.224, 0.225])])
-    train_transform2 = v2.Compose([v2.ToPILImage(), 
+    train_transform2 = v2.Compose([v2.ToImageTensor(), 
                             v2.ToDtype(torch.long),
                             v2.Resize(size=(64,64), interpolation=v2.InterpolationMode.NEAREST)])#,
     
-    val_transform = v2.Compose([v2.ToPILImage(), 
+    val_transform = v2.Compose([v2.ToImageTensor(), 
                             v2.ToDtype(torch.float32),
                             v2.Resize(size=(64,64), interpolation=v2.InterpolationMode.NEAREST),
                             v2.Normalize(mean = [0.485, 0.456,0.406], std = [0.229, 0.224, 0.225])])
-    val_transform2 = v2.Compose([v2.ToPILImage(), 
+    val_transform2 = v2.Compose([v2.ToImageTensor(), 
                             v2.ToDtype(torch.long),
                             v2.Resize(size=(64,64), interpolation=v2.InterpolationMode.NEAREST)])
 
@@ -198,7 +198,7 @@ if __name__ == "__main__":
     args.add_argument('-d', '--gpu_id', default='0', type=str,
                       help='index of which GPU to use')
     args.add_argument(
-        "-p", "--pretrained", default="False", choices=["True", "False"]
+        "-p", "--pretrained", default="True", choices=["True", "False"]
     )
     args.add_argument(
         "-m", "--model", default="fcn_resnet50", choices=["fcn_resnet50", ]
