@@ -88,7 +88,7 @@ def train_cityscapes(args):
 
     train_metric = SegMetrics(classes=train_data.classes_seg)
     val_metric = SegMetrics(classes=val_data.classes_seg)
-    val_frequency = 2  
+    val_frequency = 2
 
     model_save_dir = Path("saved_models")
     model_save_dir.mkdir(exist_ok=True)
@@ -184,7 +184,9 @@ def fine_tune_oxford(args):
             param.requires_grad = False
 
     optimizer = optim.AdamW(
-        filter(lambda p: p.requires_grad, model.parameters()),  # Only update trainable parameters
+        filter(
+            lambda p: p.requires_grad, model.parameters()
+        ),  # Only update trainable parameters
         weight_decay=args.weight_decay,
         lr=args.learning_rate,
         amsgrad=args.amsgrad,
@@ -194,7 +196,7 @@ def fine_tune_oxford(args):
 
     train_metric = SegMetrics(classes=train_data.classes_seg)
     val_metric = SegMetrics(classes=val_data.classes_seg)
-    val_frequency = 2  
+    val_frequency = 2
 
     model_save_dir = Path("saved_models")
     model_save_dir.mkdir(exist_ok=True)
@@ -223,7 +225,6 @@ def fine_tune_oxford(args):
     )
     trainer.train()
     trainer.dispose()
-
 
 
 if __name__ == "__main__":

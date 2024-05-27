@@ -214,19 +214,19 @@ class Block(nn.Module):
     def forward(self, x, H, W):
         # Apply self.norm1 to x
         x1 = self.norm1(x)
-        
+
         # Apply self.attn to x1
         x1 = self.attn(x1, H, W)
-        
+
         # Apply residual connection and drop path
         x1 = x + self.drop_path(x1)
-        
+
         # Apply self.norm2 to x1
         x2 = self.norm2(x1)
-        
+
         # Apply self.mlp to x2
         x2 = self.mlp(x2)
-        
+
         # Apply residual connection and drop path
         x2 = x1 + self.drop_path(x2)
         return x2
@@ -241,7 +241,7 @@ class OverlapPatchEmbed(nn.Module):
         # Compute the new H and W given the original image size and the patch size
         self.H = (img_size - patch_size + stride) // stride
         self.W = (img_size - patch_size + stride) // stride
-        
+
         # Compute the number of patches given the new H and W
         self.num_patches = self.H * self.W
 
