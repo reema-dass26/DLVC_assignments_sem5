@@ -88,39 +88,12 @@ class SegMetrics(PerformanceMeasure):
         """
         Return a string representation of the performance, mean IoU.
         e.g. "mIoU: 0.54"
-        '''
+        """
         return f"mIoU: {self.mIoU():.4f}"
 
-    # def compute_iou(self,y_true, y_pred):
-    #     intersection = np.sum(np.logical_and(y_true, y_pred))
-    #     union = np.sum(np.logical_or(y_true, y_pred))
-    #     return intersection / union
-    
-
-    # def mIoU(self, y_true, y_pred):
-    #     """
-    #     Calculate mean Intersection over Union (mIoU) metric for validation data.
-
-    #     Args:
-    #         y_true (Tensor): Ground truth labels tensor.
-    #         y_pred (Tensor): Predicted labels tensor.
-
-    #     Returns:
-    #         float: Mean Intersection over Union (mIoU) value.
-    #     """
-    #     mIoU = 0.0
-    #     num_classes = self.classes  # Number of classes
-
-    #     for cls in range(num_classes):
-    #         true_mask = (y_true == cls)
-    #         pred_mask = (y_pred == cls)
-    #         intersection = (true_mask & pred_mask).sum().item()
-    #         union = (true_mask | pred_mask).sum().item()
-    #         class_iou = intersection / union if union != 0 else 0
-    #         mIoU += class_iou
-
-    #     mIoU /= num_classes
-    #     return mIoU
+   
+ 
+  
     def mIoU(self) -> float:
         '''
         Compute and return the mean IoU as a float between 0 and 1.
@@ -137,26 +110,7 @@ class SegMetrics(PerformanceMeasure):
         return np.mean(ious)
 
           
- 
 
-
-    
-    # def mIoU(self,y_true, y_pred) -> float: #  create obj and send the param n remove from here
-
-    #     '''
-    #     Compute and return the mean IoU as a float between 0 and 1.
-    #     Returns 0 if no data is available (after resets).
-    #     If the denominator for IoU calculation for one of the classes is 0,
-    #     use 0 as IoU for this class.
-    #     '''
-        
-    #     miou_total = 0.0
-    #     for i in range(0, self.classes): 
-    #         y_true_class = (y_true == i)
-    #         y_pred_class = (y_pred == i)
-    #         miou_class =self.compute_iou(y_true_class, y_pred_class)
-    #         miou_total += miou_class
-    #     return miou_total / self.classes
         
 
     def dice_coefficient(y_true, y_pred):
